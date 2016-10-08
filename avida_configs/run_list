@@ -1,0 +1,12 @@
+set description experiment: cse881_semproject
+set class_pref 150
+set mem_request 4
+set email_when final
+set email lalejini@msu.edu
+set walltime 4
+set config_dir /mnt/scratch/lalejini/cse881_project/configs
+set dest_dir /mnt/scratch/lalejini/cse881_project/data
+
+1..50 limited_res__rep ./avida -c avida.cfg -s $seed -set ENVIRONMENT_FILE env_limited_res.cfg
+1..50 cascading_res__rep ./avida -c avida.cfg -s $seed -set ENVIRONMENT_FILE env_cascading_res.cfg
+1..50 unlimited_res__rep ./avida -c avida.cfg -s $seed -set ENVIRONMENT_FILE env_unlimited_res.cfg
