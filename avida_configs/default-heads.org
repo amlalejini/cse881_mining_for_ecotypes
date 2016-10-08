@@ -21,11 +21,13 @@ nop-C      #
 nop-C      #
 nop-C      #
 nop-C      #
-sense-react-NOT
 nop-C      #
 nop-C      #
 nop-C      #
-sense-react-NAND
+nop-C      #
+nop-C      #
+nop-C      #
+nop-C      #
 nop-C      #
 nop-C      #
 nop-C      #
