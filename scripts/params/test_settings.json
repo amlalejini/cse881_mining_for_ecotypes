@@ -1,0 +1,18 @@
+{
+  "avida_analysis": {
+    "experiment_location": "/Users/amlalejini/Desktop/scratch/cse881",
+    "avida_analysis_scripts_location": "../avida_analysis_scripts",
+    "analysis_scripts_to_run": ["analyze_populations.cfg"],
+    "treatments": ["cascading_res"],
+    "replicates_by_treatment": {
+      "cascading_res": [30]
+    }
+  },
+  "data_matrix_construction": {
+    "experiment_location": "",
+    "treatments": ["cascading_res"],
+    "replicates_by_treatment": {
+      "cascading_res": [30]
+    }
+  }
+}
