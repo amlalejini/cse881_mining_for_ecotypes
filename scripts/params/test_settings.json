@@ -9,10 +9,8 @@
     }
   },
   "data_matrix_construction": {
-    "experiment_location": "",
-    "treatments": ["cascading_res"],
-    "replicates_by_treatment": {
-      "cascading_res": [30]
-    }
+    "experiment_location": "/Users/amlalejini/Desktop/scratch/cse881",
+    "treatments": ["limited_res"],
+    "replicates_by_treatment": "all"
   }
 }
