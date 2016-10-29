@@ -62,9 +62,9 @@ from utilities.utilities import *
 
 matrix_attrs = ["genotype id", "tree depth", "genome length", "genome sequence",
                 "is viable (0/1)", "gestation time", "fitness", "phenotype signature",
-                "not", "nand", "and", "ornot", "andnot", "nor", "xor", "equ"]
+                "not", "nand", "and", "ornot", "andnot", "nor", "xor", "equals"]
 
-phenotype_signature = ["not", "nand", "and", "ornot", "andnot", "nor", "xor", "equ"]
+phenotype_signature = ["not", "nand", "and", "ornot", "andnot", "nor", "xor", "equals"]
 
 instruction_map = {"a":"nop-A",
                    "b":"nop-B",
@@ -115,9 +115,8 @@ def main():
 
     # Analyze each run that needs to be processed
     matrix_header = (",".join(matrix_attrs)).replace(" (0/1)", "").replace(" ", "_") + "\n"
-    print matrix_header
-    exit(-1)
     for run in to_process:
+        print "Processing " + run
         run_analysis_loc = os.path.join(analysis_loc, run)
         run_processed_loc = os.path.join(exp_loc, "processed", run)
         mkdir_p(run_processed_loc)
@@ -126,26 +125,43 @@ def main():
         # * Make a .csv for each population.
         # * Make a .csv for each transition.
         prev_content = None
+        prev_pop = None
         cur_content = None
-        populations = [p for p in os.listdir(run_analysis_loc) if "pop_" in p]
+        cur_pop = None
+        populations = [(int(p.split("_")[-1]), p) for p in os.listdir(run_analysis_loc) if "pop_" in p]
+        populations.sort()
         for pop in populations:
+            pop = pop[-1]
             pop_details_fn = os.path.join(run_analysis_loc, pop, "pop_detail.dat")
             with open(pop_details_fn, "r") as fp: pop_details = detail_file_extract(fp)
             prev_content = cur_content
+            prev_pop = cur_pop
             cur_content = ""
-            # TODO: expand by abundance
-            # TODO: translate genome sequence
+            cur_pop = pop
             # for each genotype:
-            #   observation = []
-            #   for each attr in matrix_attrs
-            #      observation.append(details[attr])
-            #   obsevation = ','.join(observation) + "\n"
-            #   cur_content += observation
-            # Write out cur_content as pop slice
-
-            # if prev_content != None...
-            #  - write out cur_content + prev_content as transition
-
+            for genotype in pop_details:
+                genotype_details = pop_details[genotype]
+                # Repeat for num cpus
+                num_observations = int(genotype_details["number of cpus"])
+                for _ in range(0, num_observations):
+                    observation = []
+                    for attr in matrix_attrs:
+                        # Special case: phenotype signature
+                        if attr == "phenotype signature":
+                            observation.append(''.join([genotype_details[task] for task in phenotype_signature]))
+                        # General case
+                        else:
+                            observation.append(genotype_details[attr])
+                    observation = ','.join(observation) + "\n"
+                    cur_content += observation
+            # Write out pop_slice (cur content)
+            with open(os.path.join(run_processed_loc, "population_data_matrices", "snapshot__" + pop + ".csv"), "w") as fp:
+                fp.write(matrix_header + cur_content)
+            # Write out transition (prev_content + cur_content)
+            if prev_content != None:
+                with open(os.path.join(run_processed_loc, "transition_data_matrices", "transition__" + prev_pop + "--" + cur_pop + ".csv"), "w") as fp:
+                    fp.write(matrix_header + prev_content + cur_content)
+    print ("Done")
 
 
 
