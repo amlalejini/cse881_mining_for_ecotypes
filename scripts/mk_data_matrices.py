@@ -119,9 +119,11 @@ def main():
         print "Processing " + run
         run_analysis_loc = os.path.join(analysis_loc, run)
         run_processed_loc = os.path.join(exp_loc, "processed", run)
+        if os.path.isdir(run_processed_loc): continue
         mkdir_p(run_processed_loc)
         mkdir_p(os.path.join(run_processed_loc, "population_data_matrices"))
         mkdir_p(os.path.join(run_processed_loc, "transition_data_matrices"))
+        # Check to see if this run already exists.
         # * Make a .csv for each population.
         # * Make a .csv for each transition.
         prev_content = None
