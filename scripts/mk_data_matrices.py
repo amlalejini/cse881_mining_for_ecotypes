@@ -99,7 +99,7 @@ def main():
     """
     Main Script
     """
-    settings_fn = "params/test_settings.json"
+    settings_fn = "params/settings.json"
     settings = None
     # Load settings from settings file.
     with open(settings_fn) as fp: settings = json.load(fp)["data_matrix_construction"]
