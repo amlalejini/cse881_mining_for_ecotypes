@@ -1,0 +1,8 @@
+.organism_rect {
+  stroke: black;
+  z-index: 1; }
+  .organism_rect:hover {
+    stroke-width: 3px;
+    z-index: 100; }
+
+/*# sourceMappingURL=cluster_visualization.css.map */

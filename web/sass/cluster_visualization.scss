@@ -1,0 +1,13 @@
+
+.cluster_rect {
+  
+}
+
+.organism_rect {
+  stroke: black;
+  z-index: 1;
+  &:hover {
+    stroke-width: 3px;
+    z-index: 100;
+  }
+}
