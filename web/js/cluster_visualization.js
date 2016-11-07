@@ -1,4 +1,4 @@
-var clusterDataFPath = "data/testclusterdata.csv"
+var clusterDataFPath = "data/ordered_cluster_data.csv"
 var orgDataFPath = "data/testorgdata.csv"
 
 var margin = {top: 20, right: 20, bottom: 20, left: 20};
@@ -9,13 +9,14 @@ var canvasHeight = frameHeight - margin.top - margin.bottom;
 
 var tempColors = ["red", "green", "blue", "orange", "white"];
 
-var timeSliceHeight = 50;
-var timeSliceSpace = 40;
+var timeSliceHeight = 80;
+var timeSliceSpace = 150;
 var organismWidth = 10;
 
 var orgData = null;
 var clusterData = null;
 var ancestorLookup = {};
+var clusterLookup = {}; // cluster: {x: <>, y: <>, size: <>}
 var validTimes = new Set();
 var maxPopulationSize = 500;
 
@@ -42,10 +43,15 @@ var clusterDataAccessor = function(row) {
   var clusterID = row.cluster_id;
   var time = row.time;
   var backClusterID = row.back_cluster_id;
+  var order = row.order;
+  if (!clusterLookup.hasOwnProperty(clusterID)) {
+    clusterLookup[clusterID] = {};
+  }
   return {
     clusterID: clusterID,
     time: time,
-    backClusterID
+    backClusterID: backClusterID,
+    order: order
   };
 }
 
@@ -101,16 +107,20 @@ var runVisualization = function() {
     // Draw Data
     // Cleanup old data.
     dataCanvas.selectAll("g").remove();
+    var hasTreeBranch = new Set(); // Keeps track of if we've already drawn the out-going tree branch for a cluster.
     for (var t = 0; t < timeSeries.length; t++) {
       var time = timeSeries[t];
       var timeCanvas = dataCanvas.append("g").attr({"class": "time_canvas"});
       var yStart = t * (timeSliceSpace + timeSliceHeight); // Local starting Y
       // Get the clusters relevant to this time point.
       var curClusters = clusterData.filter(function(d) { return d.time == time; });
+      // Sort clusters by order.
+      curClusters.sort(function(a, b) { return a.order - b.order; });
       // Get the organisms relevant to this time point.
       var curOrgs = orgData.filter(function(d) { return d.time == time; });
       // For each cluster at thie time point:
       clusterOffset = 0;
+      orderRange = curClusters[curClusters.length - 1] - curClusters[0];
       for (var ci = 0; ci < curClusters.length; ci++) {
         cluster = curClusters[ci];
         // Get organisms that make up this cluster.
@@ -126,23 +136,107 @@ var runVisualization = function() {
                          "id": cluster.clusterID,
                          "fill": clusterColor
                         });
-        // TODO: Draw organisms.
+        // Record cluster info for future clusters to use.
+        clusterLookup[cluster.clusterID]["x_loc"] = clusterOffset;
+        clusterLookup[cluster.clusterID]["y_loc"] = yStart;
+        clusterLookup[cluster.clusterID]["num_orgs"] = clusterOrgs.length;
+        clusterOffset = null // TODO
+        if (t > 0) { } // TODO
+        else { }
+        clusterLookup[cluster.clusterID]["outgoing_line_offset"] = 0; // TODO
+        // Draw organisms.
         var clusterCanvas = timeCanvas.append("g").attr({"class": "cluster_canvas"});
         var orgs = clusterCanvas.selectAll("rect").data(clusterOrgs);
         orgs.enter().append("rect");
         orgs.exit().remove();
-        orgs.attr({"y": function(d, i) { return yScale(yStart); },
-                   "x": function(d, i) { return xScale(clusterOffset + (i * organismWidth)); },
+        orgs.attr({"y": function(d, i) {
+                          // If this organism is an ancestor, store its y location.
+                          yLoc = yStart;
+                          if (ancestorLookup.hasOwnProperty(d.orgID)) {
+                            ancestorLookup[d.orgID]["y_loc"] = yLoc
+                          }
+                          return yScale(yLoc);
+                        },
+                   "x": function(d, i) {
+                          // If this organism is an ancestor, store its x location.
+                          xLoc = clusterOffset + (i * organismWidth);
+                          if (ancestorLookup.hasOwnProperty(d.orgID)) {
+                            ancestorLookup[d.orgID]["x_loc"] = xLoc
+                          }
+                          return xScale(xLoc);
+                        },
                    "width": function(d, i) { return xScale(organismWidth); },
                    "height": function(d, i) { return yScale(timeSliceHeight); },
                    "class": "organism_rect",
                    "id": function(d, i) { return d.orgID; },
                    "fill": clusterColor
                   });
+        // Draw line from organism to organism's ancestor.
+        if (t > 0) {  // Don't draw these relationships for first time slice.
+          var ancestorRelationshipCanvas = clusterCanvas.append("g");
+          var ancestorRelationships = ancestorRelationshipCanvas.selectAll("line").data(clusterOrgs);
+          ancestorRelationships.enter().append("line");
+          ancestorRelationships.exit().remove();
+          ancestorRelationships.attr({"x1": function(d, i) { return xScale((clusterOffset + (i * organismWidth)) + 0.5 * organismWidth); },
+                                      "y1": function(d, i) { return yScale(yStart); },
+                                      "x2": function(d, i) { return xScale(ancestorLookup[d.ancestor]["x_loc"] + 0.5 * organismWidth); },
+                                      "y2": function(d, i) { return yScale(ancestorLookup[d.ancestor]["y_loc"] + timeSliceHeight); },
+                                      "stroke": "gray",
+                                      "stroke-width": "0.25"
+                                     });
+        }
+        // Draw line from current cluster to back cluster.
+        if (t > 0) { // Don't draw these relationships for first slice.
+          var backClusterCanvas = clusterCanvas.append("g");
+          // Straight lines:
+          // backClusterCanvas.append("line")
+          //                  .attr({"x1": function(d, i) { return xScale(clusterOffset + (0.5 * clusterOrgs.length * organismWidth)); },
+          //                         "y1": function(d, i) { return yScale(yStart); },
+          //                         "x2": function(d, i) { return xScale(clusterLookup[cluster.backClusterID]["x_loc"] + (0.5 * clusterLookup[cluster.backClusterID]["num_orgs"] * organismWidth)); },
+          //                         "y2": function(d, i) { return yScale(clusterLookup[cluster.backClusterID]["y_loc"] + timeSliceHeight); },
+          //                         "stroke": "black",
+          //                         "stroke-width": "2"
+          //                         });
+          // Tree lines:
+          // 1) Line out from back cluster (if hasn't been drawn already)  |
+          // 2) Horizontal line used to line up previous line with center of current cluster. ---
+          // 3) Vertical line from previous line to current cluster center.
+          backClusterID = cluster.backClusterID;
+          backCluster = clusterLookup[backClusterID];
+          if (!hasTreeBranch.has(backClusterID)) {
+            // 1) Draw line out of back cluster.
+            backClusterCanvas.append("line")
+                             .attr({"x1": xScale(backCluster["x_loc"] + (0.5 * backCluster["num_orgs"] * organismWidth)),
+                                    "y1": yScale(backCluster["y_loc"] + timeSliceHeight),
+                                    "x2": xScale(backCluster["x_loc"] + (0.5 * backCluster["num_orgs"] * organismWidth)),
+                                    "y2": yScale(backCluster["y_loc"] + timeSliceHeight + (0.5 * timeSliceSpace) - ci),
+                                    "stroke": "black",
+                                    "stroke-width": "1"
+                                  });
+          }
+          // 2) Draw line over to from line (1) to current cluster center.
+          backClusterCanvas.append("line")
+                           .attr({"x1": xScale(backCluster["x_loc"] + (0.5 * backCluster["num_orgs"] * organismWidth)),
+                                  "y1": yScale(backCluster["y_loc"] + timeSliceHeight + (0.5 * timeSliceSpace) - ci),
+                                  "x2": xScale(clusterOffset + (0.5 * clusterOrgs.length * organismWidth)),
+                                  "y2": yScale(backCluster["y_loc"] + timeSliceHeight + (0.5 * timeSliceSpace) - ci),
+                                  "stroke": "black",
+                                  "stroke-width": "1"
+                                });
+          // // 3) Draw line from (2) to current cluster.
+          backClusterCanvas.append("line")
+                           .attr({"x1": xScale(clusterOffset + (0.5 * clusterOrgs.length * organismWidth)),
+                                  "y1": yScale(backCluster["y_loc"] + timeSliceHeight + (0.5 * timeSliceSpace) - ci),
+                                  "x2": xScale(clusterOffset + (0.5 * clusterOrgs.length * organismWidth)),
+                                  "y2": yScale(yStart),
+                                  "stroke": "black",
+                                  "stroke-width": "1"
+                                });
+
+        }
         clusterOffset += (clusterOrgs.length * organismWidth);
       }
     }
-
   }
   update();
 
