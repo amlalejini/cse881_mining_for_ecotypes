@@ -3,9 +3,11 @@ import re
 
 def detail_file_extract(detail_fp):
     """
-    Given file pointer to detail file, extract information into form below:
+    Given path to detail file, extract information into form below:
     return [{"detail":value, "detail":value, ...}, ...]
     """
+    with open(detail_fp, "r") as fp:
+        detail_fp = fp.read().strip("\n").split("\n")
     ######################
     # Step 1) Build Legend
     ###
