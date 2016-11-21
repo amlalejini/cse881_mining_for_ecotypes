@@ -4,7 +4,7 @@
 #PBS -l walltime=00:02:00
 #PBS -l mem=4gb
 #PBS -l nodes=1:ppn=1
-#PBS -l feature=intel14
+#PBS -l feature=intel16
 ### Name job
 #PBS -N limited_res_1
 ### Email stuff
