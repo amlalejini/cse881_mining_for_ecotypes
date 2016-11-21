@@ -19,7 +19,7 @@ if __name__ == "__main__":
         pop2 = reduced_pop_files[ri + 1]
         up1 = GetPopUpdate(pop1)
         up2 = GetPopUpdate(pop2)
-        tname = "trans__pops_%d_%d" % (up1, up2)
+        tname = "trans__pop_%d_%d.csv" % (up1, up2)
         # Get content of pop1, pop2, join.
         p1_content = None
         with open(os.path.join(target_dir, pop1)) as fp:
