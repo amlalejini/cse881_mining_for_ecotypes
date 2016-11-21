@@ -1,0 +1,29 @@
+#!/bin/bash --login
+
+### Define Resources needed:
+#PBS -l walltime=74:00:00
+#PBS -l mem=4gb
+#PBS -l nodes=1:ppn=1
+#PBS -l feature=intel16
+### Name job
+#PBS -N limited_res_10
+### Email stuff
+#PBS -M lalejini@msu.edu
+#PBS -m ae
+### Setup multiple replicates
+#PBS -t 1-1
+### Combine and redirect output/error logs
+#PBS -j oe
+
+REPNAME=limited_res__rep_10
+SRCDIR=/mnt/home/lalejini/Data/cse881_project/processed/${REPNAME}/population_data_matrices__reduced/
+DESTDIR=/mnt/home/lalejini/Data/cse881_project/processed/${REPNAME}/population_dist_matrices__reduced/
+
+module load powertools
+module swap GNU GNU/5.2
+
+cd /mnt/home/lalejini/exp_ws/cse881_mining_for_ecotypes/scripts
+
+python run_distmatrix_computations.py ${SRCDIR} ${DESTDIR} > ${REPNAME}_log
+
+qstat -f ${PBS_JOBID}
