@@ -16,6 +16,6 @@
   "data_matrix_construction": {
     "experiment_location": "/mnt/scratch/lalejini/cse881_project",
     "treatments": ["limited_res", "unlimited_res", "cascading_res"],
-    "replicates_by_treatment": "all"
+    "replicates_by_treatment": {"limited_res": [10, 11, 12, 14, 16, 17, 19, 1, 20, 22]}
   }
 }

@@ -69,3 +69,10 @@ if __name__ == "__main__":
     print b
     print JaccardSimilarity(a, b)
     print SimpleMatchingSimilarity(a, b)
+    a = "aaaaaaaaaaaaaaaa"
+    b = "bbbbb"
+    print a
+    print len(a)
+    print b
+    print len(b)
+    print EditDistance(a, b)
