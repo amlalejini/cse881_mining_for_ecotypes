@@ -1,0 +1,6 @@
+treatment,cluster_params,time,accuracy,num_correct,num_wrong
+limited_res__rep_1,spec_cluster__nc_9__mode_both,10000,0.0543333333333,163,2837
+limited_res__rep_1,spec_cluster__nc_9__mode_both,15000,0.359,1077,1923
+limited_res__rep_1,spec_cluster__nc_9__mode_both,20000,0.0586666666667,176,2824
+limited_res__rep_1,spec_cluster__nc_9__mode_both,25000,0.363333333333,1090,1910
+limited_res__rep_1,spec_cluster__nc_9__mode_both,total,0.367066666667,5506,9494
