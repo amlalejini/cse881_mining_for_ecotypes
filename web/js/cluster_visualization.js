@@ -1,5 +1,5 @@
-var clusterDataFPath = "data/ordered_cluster_data.csv"
-var orgDataFPath = "data/testorgdata.csv"
+var clusterDataFPath = "data/clusterinfo.csv"
+var orgDataFPath = "data/orgdata.csv"
 
 var margin = {top: 20, right: 20, bottom: 20, left: 20};
 var frameWidth = 940;
@@ -8,20 +8,21 @@ var canvasWidth = frameWidth - margin.left - margin.right;
 var canvasHeight = frameHeight - margin.top - margin.bottom;
 
 var tempColors = ["red", "green", "blue", "orange", "white"];
+tempColors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999'];
 
 var timeSliceHeight = 80;
 var timeSliceSpace = 150;
-var organismWidth = 10;
+var organismWidth = 20;
 
 var orgData = null;
 var clusterData = null;
 var ancestorLookup = {};
 var clusterLookup = {}; // cluster: {x: <>, y: <>, size: <>}
 var validTimes = new Set();
-var maxPopulationSize = 500;
+var maxPopulationSize = 3000;
 
 var orgDataAccessor = function(row) {
-  var orgID = row.org_id;
+  var orgID = row.genotype_id;
   var time = row.time;
   var clusterID = row.cluster_id;
   var ancestor = row.ancestor_id;
@@ -115,7 +116,7 @@ var runVisualization = function() {
       curClusters.sort(function(a, b) { return a.order - b.order; });
       // Get the organisms relevant to this time point.
       var curOrgs = orgData.filter(function(d) { return d.time == time; });
-      // For each cluster at thie time point:
+      // For each cluster at this time point:
       var clusterOffset = 0;
       var minOffset = timeSliceSpace * 0.25;
       var maxOffset = timeSliceSpace * 0.5;
@@ -176,7 +177,8 @@ var runVisualization = function() {
                    "height": function(d, i) { return yScale(timeSliceHeight); },
                    "class": "organism_rect",
                    "id": function(d, i) { return d.orgID; },
-                   "fill": clusterColor
+                   "fill": clusterColor,
+                   "stroke-width": 0
                   });
         // Draw line from organism to organism's ancestor.
         if (t > 0) {  // Don't draw these relationships for first time slice.
