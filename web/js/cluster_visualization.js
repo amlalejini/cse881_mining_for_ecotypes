@@ -1,6 +1,10 @@
-var clusterDataFPath = "data/clusterinfo.csv"
-var orgDataFPath = "data/orgdata.csv"
+var clusterDataFPath = "data/flat_clusterinfo.csv"
+var orgDataFPath = "data/flat_orgdata.csv"
 var clusterAccuracyFPath = "data/accuracy_table.csv"
+
+var defaultTreatmentCode = "limited_res__rep_1: spec_cluster__nc_5__mode_phenotype";
+var treatmentCodes = [];
+var currentTreatmentCode = defaultTreatmentCode;
 
 var margin = {top: 20, right: 20, bottom: 20, left: 20};
 var frameWidth = 940;
@@ -15,8 +19,8 @@ var tooltip = d3.select("body")
                         .style("z-index", "10")
                         .style("visibility", "hidden");
 
-var tempColors = ["red", "green", "blue", "orange", "white"];
-tempColors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999'];
+var cb_colors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999'];
+var GetColor = function(i) { return cb_colors[i % cb_colors.length]; }
 
 var timeSliceHeight = 80;
 var timeSliceSpace = 150;
@@ -39,17 +43,26 @@ var buildOrgToolTipHTML = function(org) {
     "<li>" + "Viability (0/1): " + org.viable + "</li>" +
     "<li>" + "Generation Length: " + org.generationLength + "</li>" +
     "<li>" + "Phenotype Signature: " + org.phenotypeSignature + "</li>" +
-  "</ul>"
+  "</ul>";
 
   return content;
 }
 
 var buildClusterRelationToolTipHTML = function(cluster) {
 
-  return "Hello world";
+  var content = "<ul class='list-unstyled'>" +
+    "<li>" + "Cluster Relationship: " + cluster.backClusterID + " &#8594; " + cluster.clusterID + "</li>" +
+    "<li>" + "Time: " + cluster.backClusterID.split("_")[0] + " &#8594; "  + cluster.time + "</li>" +
+    "<li>" + "Number Predictions Correct: " + cluster.numCorrect + "</li>" +
+    "<li>" + "Number Predictions Wrong: " + cluster.numWrong + "</li>" +
+    "<li>" + "Prediction Accuracy: " + cluster.percentCorrect + "</li>" +
+  "</ul>";
+  return content;
 }
 
 var orgDataAccessor = function(row) {
+  var treatment = row.treatment;
+  var cluster_params = row.cluster_params;
   var orgID = row.genotype_id;
   var time = row.time;
   var clusterID = row.cluster_id;
@@ -67,6 +80,12 @@ var orgDataAccessor = function(row) {
   var nor = row.nor;
   var xor = row.xor;
   var equals = row.equals;
+
+  var treatmentCode = treatment + ": " + cluster_params;
+  if (treatmentCodes.indexOf(treatmentCode) == -1) {
+    treatmentCodes.push(treatmentCode);
+  }
+
   // Keep track of each time point.
   validTimes.add(time);
   // Keep track of ancestor organisms.
@@ -90,11 +109,15 @@ var orgDataAccessor = function(row) {
     andnot: andnot,
     nor: nor,
     xor: xor,
-    equals: equals
+    equals: equals,
+    treatment: treatment,
+    clusterParams: cluster_params
   };
 }
 
 var clusterDataAccessor = function(row) {
+  var treatment = row.treatment;
+  var cluster_params = row.cluster_params;
   var clusterID = row.cluster_id;
   var time = row.time;
   var backClusterID = row.back_cluster_id;
@@ -114,7 +137,9 @@ var clusterDataAccessor = function(row) {
     numCorrect: numCorrect,
     numWrong: numWrong,
     total: total,
-    percentCorrect: percentCorrect
+    percentCorrect: percentCorrect,
+    treatment: treatment,
+    clusterParams: cluster_params
   };
 }
 
@@ -144,6 +169,23 @@ var runVisualization = function() {
   var frame = chartArea.append("svg");
   var canvas = frame.append("g");
   var dataCanvas = canvas.append("g").attr({"class": "data_canvas"});
+
+  //////// Visualization functions ////////
+  var refreshDashboard = function() {
+    /* The function refreshes the visualization dashboard. */
+    // Update treatment dropdown text.
+    var treatmentDropDownButton = $("#treatment_selector").text(currentTreatmentCode);
+  }
+  var treatmentDropdownCallback = function() {
+    /* Called on treatment drop down click. */
+    var selection = $(this).attr("value");
+    // Update the current treatment
+    currentTreatmentCode = selection;
+    // Refresh the dashboard.
+    refreshDashboard();
+    // Redraw the visualization.
+    update();
+  }
 
   /*
     Create accuracy table.
@@ -204,16 +246,29 @@ var runVisualization = function() {
     // Cleanup old data.
     dataCanvas.selectAll("g").remove();
     var hasTreeBranch = new Set(); // Keeps track of if we've already drawn the out-going tree branch for a cluster.
+    // Filter data based on treatment code
+    var curTreatment = currentTreatmentCode.split(": ")[0];
+    var curClusterParams = currentTreatmentCode.split(": ")[1];
+    //  * Filter cluster data
+    var filteredClusterData = clusterData.filter(function(d) { return d.treatment == curTreatment && d.clusterParams == curClusterParams; })
+    //  * Filter organism data
+    var filteredOrgData = orgData.filter(function(d) { return d.treatment == curTreatment && d.clusterParams == curClusterParams; });
     for (var t = 0; t < timeSeries.length; t++) {
       var time = timeSeries[t];
       var timeCanvas = dataCanvas.append("g").attr({"class": "time_canvas"});
       var yStart = t * (timeSliceSpace + timeSliceHeight); // Local starting Y
+      // TODO: Append some text (time) @ yStart
+      timeCanvas.append("text").attr({"class": "time_tick",
+                                      "x": -5,
+                                      "y": yScale(yStart + timeSliceHeight),
+                                      "transform": "rotate(-90," + -5 + "," + yScale(yStart + timeSliceHeight) + ")"})
+                                .text(time);
       // Get the clusters relevant to this time point.
-      var curClusters = clusterData.filter(function(d) { return d.time == time; });
+      var curClusters = filteredClusterData.filter(function(d) { return d.time == time; });
       // Sort clusters by order.
       curClusters.sort(function(a, b) { return a.order - b.order; });
       // Get the organisms relevant to this time point.
-      var curOrgs = orgData.filter(function(d) { return d.time == time; });
+      var curOrgs = filteredOrgData.filter(function(d) { return d.time == time; });
       // For each cluster at this time point:
       var clusterOffset = 0;
       var minOffset = timeSliceSpace * 0.25;
@@ -224,7 +279,7 @@ var runVisualization = function() {
         // Get organisms that make up this cluster.
         var clusterOrgs = curOrgs.filter(function(d) { return d.clusterID == cluster.clusterID; });
         // Draw cluster as box.
-        var clusterColor = tempColors[parseInt(cluster.clusterID.split("_")[1])];
+        var clusterColor = GetColor(parseInt(cluster.clusterID.split("_")[1]));
         timeCanvas.append("rect")
                   .attr({"width": xScale(clusterOrgs.length * organismWidth),
                          "height": yScale(timeSliceHeight),
@@ -244,13 +299,8 @@ var runVisualization = function() {
         else {
           treeOffset = ((cluster.order - orderRange[0]) / (orderRange[1] - orderRange[0])) * (maxOffset - minOffset) + minOffset;
         }
-        //console.log("==========");
-        // console.log(orderRange);
-        // console.log(cluster.order);
-        // console.log(minOffset);
-        // console.log(maxOffset);
+
         clusterLookup[cluster.clusterID]["outgoing_line_offset"] = treeOffset;
-        //console.log(treeOffset);
         // Draw organisms.
         var clusterCanvas = timeCanvas.append("g").attr({"class": "cluster_canvas"});
         var orgs = clusterCanvas.selectAll("rect").data(clusterOrgs);
@@ -297,26 +347,6 @@ var runVisualization = function() {
                                       "stroke-width": "0.25",
                                       "class": "ancestor_line"
                                     });
-        // Draw line from current cluster to back cluster.
-        // Don't draw these relationships for first slice.
-        // var backClusterCanvas = clusterCanvas.append("g");
-        // var backClusterRelations = backClusterCanvas.selectAll("line");
-        // // Straight lines:
-        // backClusterRelations.enter().append("line")
-        // backClusterRelations.exit().remove()
-        // backClusterRelations.attr({"x1": function(d, i) { return xScale(clusterOffset + (0.5 * clusterOrgs.length * organismWidth)); },
-        //                         "y1": function(d, i) { return yScale(yStart); },
-        //                         "x2": function(d, i) { return xScale(clusterLookup[cluster.backClusterID]["x_loc"] + (0.5 * clusterLookup[cluster.backClusterID]["num_orgs"] * organismWidth)); },
-        //                         "y2": function(d, i) { return yScale(clusterLookup[cluster.backClusterID]["y_loc"] + timeSliceHeight); },
-        //                         "stroke": "black",
-        //                         "stroke-width": "2",
-        //                         "class": "back_cluster_line"
-        //                       });
-        // backClusterCanvas.on("mouseover", function())
-
-            // .on("mouseover", function(d) { return tooltip.style("visibility", "visible").html(buildOrgToolTipHTML(d)); })
-            // .on("mousemove", function(d) { return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px"); })
-            // .on("mouseout", function(d) { return tooltip.style("visibility", "hidden"); });
         }
         clusterOffset += (clusterOrgs.length * organismWidth);
       }
@@ -325,43 +355,47 @@ var runVisualization = function() {
       // Draw line from clusters to back cluster.
       // 1) filter out back_cluster_id = 'none's
       // 2) draw line
-      var clusterRelations = curClusters.filter(function(d) { return d.backClusterID != "none"; });
-      console.log(clusterRelations);
+      var clusterRelations = curClusters.filter(function(d) { return d.backClusterID != "none" && d.backClusterID.split("_")[1] != "NONE"; });
       var clusterRelationCanvas = timeCanvas.append("g").attr({"class": "cluster_relation_canvas"});
-      var backClusterRelations = clusterRelationCanvas.selectAll("line");
+      var backClusterRelations = clusterRelationCanvas.selectAll("line").data(clusterRelations);
       backClusterRelations.enter().append("line");
       backClusterRelations.exit().remove();
-      backClusterRelations.attr({"x1": function(d, i) { return xScale(clusterLookup[d.clusterID]["cluster_offset"] + (0.5 * clusterLookup[d.clusterID]["num_orgs"] * organismWidth)); },
-                                 //"x1": function(d, i) { return xScale(clusterOffset + (0.5 * clusterOrgs.length * organismWidth)); },
-                                //  "y1": function(d, i) { return yScale(yStart); },
-                                //  "x2": function(d, i) { return xScale(clusterLookup[cluster.backClusterID]["x_loc"] + (0.5 * clusterLookup[cluster.backClusterID]["num_orgs"] * organismWidth)); },
-                                //  "y2": function(d, i) { return yScale(clusterLookup[cluster.backClusterID]["y_loc"] + timeSliceHeight); },
-                                //  "stroke": "black",
-                                //  "stroke-width": "2",
-                                //  "class": "back_cluster_line"});
-      //console.log(clusterLookup);
-           // Draw line from current cluster to back cluster.
-            // Don't draw these relationships for first slice.
-            // var backClusterCanvas = clusterCanvas.append("g");
-            // var backClusterRelations = backClusterCanvas.selectAll("line");
-            // // Straight lines:
-            // backClusterRelations.enter().append("line")
-            // backClusterRelations.exit().remove()
-            // backClusterRelations.attr({"x1": function(d, i) { return xScale(clusterOffset + (0.5 * clusterOrgs.length * organismWidth)); },
-            //                         "y1": function(d, i) { return yScale(yStart); },
-            //                         "x2": function(d, i) { return xScale(clusterLookup[cluster.backClusterID]["x_loc"] + (0.5 * clusterLookup[cluster.backClusterID]["num_orgs"] * organismWidth)); },
-            //                         "y2": function(d, i) { return yScale(clusterLookup[cluster.backClusterID]["y_loc"] + timeSliceHeight); },
-            //                         "stroke": "black",
-            //                         "stroke-width": "2",
-            //                         "class": "back_cluster_line"
-            //                       });
-            // backClusterCanvas.on("mouseover", function())
-
-                // .on("mouseover", function(d) { return tooltip.style("visibility", "visible").html(buildOrgToolTipHTML(d)); })
-                // .on("mousemove", function(d) { return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px"); })
-                // .on("mouseout", function(d) { return tooltip.style("visibility", "hidden"); });
+      backClusterRelations.attr({"x1": function(d) { return xScale(clusterLookup[d.clusterID]["cluster_offset"] + (0.5 * clusterLookup[d.clusterID]["num_orgs"] * organismWidth)); },
+                                 "y1": function(d) { return yScale(yStart); },
+                                 "x2": function(d) { return xScale(clusterLookup[d.backClusterID]["x_loc"] + (0.5 * clusterLookup[d.backClusterID]["num_orgs"] * organismWidth))},
+                                 "y2": function(d) { return yScale(clusterLookup[d.backClusterID]["y_loc"] + timeSliceHeight); },
+                                 "stroke": "black",
+                                 "stroke-width": "2",
+                                 "class": "back_cluster_line"});
+      backClusterRelations.on("mouseover", function(d) { return tooltip.style("visibility", "visible").html(buildClusterRelationToolTipHTML(d)); })
+                .on("mousemove", function(d) { return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px"); })
+                .on("mouseout", function(d) { return tooltip.style("visibility", "hidden"); });
     }
   }
+
+  //////// Build dashboard ////////
+  // Populate the treatment dropdown.
+  var treatmentDropdown = $("#treatment-selection-dropdown");
+  treatmentDropdown.empty();
+  $.each(treatmentCodes, function(i, p) {
+    var li = $("<li/>")
+              .appendTo(treatmentDropdown);
+    var a = $("<a/>")
+              .attr({"value": this, "href": "#"})
+              .text(this)
+              .appendTo(li);
+  });
+  var treatmentDropdownButton = $("#treatment_selector").text(currentTreatmentCode);
+  $("<span/>").attr({"class": "caret"}).appendTo(treatmentDropdownButton);
+  // Setup component listeners.
+  $(document).ready(function() {
+    // Treatment dropdown listener.
+    $("#treatment-selection-dropdown li a").click(treatmentDropdownCallback);
+    $(window).resize(function() {
+      update();
+    });
+  });
+
   update();
 
 }
