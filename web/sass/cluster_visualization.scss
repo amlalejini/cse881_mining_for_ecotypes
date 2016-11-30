@@ -1,6 +1,6 @@
 
 .cluster_rect {
-  
+
 }
 
 .organism_rect {
@@ -10,4 +10,13 @@
     stroke-width: 3px;
     z-index: 100;
   }
+}
+
+.back_cluster_line {
+  z-index: 10;
+}
+
+.ancestor_line {
+  z-index: 1;
+  opacity: 0.5;
 }
