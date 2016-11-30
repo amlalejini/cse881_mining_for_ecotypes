@@ -44,6 +44,8 @@ d(o1-gen, o1-gen)|d(o1-phen, o1-phen), d(o1-gen, o2-gen)|d(o1-phen, o2-phen)....
     * Script: mk_postcluster_data_matrices.py
   * Order cluster data to optimize for visualization
     * Script: order_cluster_data.py
-    * This script must be run before visualizing data.
+    * This script has a function that will get called by calc phylogeny accuracy.
+  * Compute cluster Accuracy
+    * Script: compute cluster accuracy
   * Calculate phylogeny accuracy:
     * Script: calc_phylogeny_accuracy.py

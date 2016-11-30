@@ -31,13 +31,21 @@ def OrderClusterData(file_content):
             for cluster in time_slices[times[ti]]:
                 ordering_lookup[cluster["cluster_id"]] = order_cnt
                 order_cnt += 1
+
         else:
             # Sort clusters by back cluster id
-            clusters = [(ordering_lookup[cluster["back_cluster_id"]], cluster) for cluster in time_slices[times[ti]]]
+            # clusters = [(ordering_lookup[cluster["back_cluster_id"]], cluster) for cluster in time_slices[times[ti]]]
+            clusters = []
+            for cluster in time_slices[times[ti]]:
+                if not "NONE" in cluster["back_cluster_id"]:
+                    clusters.append((ordering_lookup[cluster["back_cluster_id"]], cluster))
+                else:
+                    clusters.append((float('inf'), cluster))
             clusters.sort() # Sort on back_cluster_id
             for cluster in clusters:
                 ordering_lookup[cluster[1]["cluster_id"]] = order_cnt
                 order_cnt += 1
+
 
     # Output cluster data file with ordering information.
     new_content = ",".join(attrs) + ",order\n"

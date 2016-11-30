@@ -19,7 +19,10 @@ from utilities.utilities import *
 if __name__ == "__main__":
     exp_path = "/Users/amlalejini/Desktop/scratch/cse881"
     treatments = ["limited_res__rep_1"]
-    cluster_treats = ["spec_cluster__nc_9__mode_both"]
+    cluster_treats = ["spec_cluster__nc_9__mode_both",
+                      "spec_cluster__nc_5__mode_phenotype",
+                      "spec_cluster__nc_5__mode_genotype",
+                      "db_cluster__ep_0p1__mp_5__mode_phenotype"]
 
     final_update = 25000
     update_step = 5000
