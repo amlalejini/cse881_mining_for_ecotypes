@@ -1,0 +1,30 @@
+#!/bin/bash --login
+
+### Define Resources needed:
+#PBS -l walltime=74:00:00
+#PBS -l mem=4gb
+#PBS -l nodes=1:ppn=1
+#PBS -l feature=intel16
+### Name job
+#PBS -N spect_genotype_6
+### Email stuff
+#PBS -M lalejini@msu.edu
+#PBS -m ae
+### Setup multiple replicates
+#PBS -t 1-1
+### Combine and redirect output/error logs
+#PBS -j oe
+
+module load powertools
+module swap GNU GNU/5.2
+module load NumPy
+module load SciPy
+module load PIL
+module load matplotlib
+source /mnt/home/lalejini/exp_ws/cse881_mining_for_ecotypes/pyenv/bin/activate
+
+cd /mnt/home/lalejini/exp_ws/cse881_mining_for_ecotypes/scripts
+
+python cluster_distmats.py spectral genotype 6 > spect_genotype_6_log
+
+qstat -f ${PBS_JOBID}
