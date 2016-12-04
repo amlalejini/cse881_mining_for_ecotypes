@@ -2,9 +2,38 @@ var clusterDataFPath = "data/flat_clusterinfo.csv"
 var orgDataFPath = "data/flat_orgdata.csv"
 var clusterAccuracyFPath = "data/accuracy_table.csv"
 
-var defaultTreatmentCode = "limited_res__rep_1: spec_cluster__nc_5__mode_phenotype";
+var defaultTreatmentCode = "limited_res__rep_1: db_cluster__ep_0p1__mp_5__mode_phenotype";
 var treatmentCodes = [];
 var currentTreatmentCode = defaultTreatmentCode;
+
+var codeToHumanReadableSelections = {
+  "limited_res__rep_1: db_cluster__ep_0p1__mp_5__mode_both": "Example 1: DBScan, eps = 0.1, minpts = 5, similarity metric: combination",
+  "limited_res__rep_1: db_cluster__ep_0p1__mp_5__mode_genotype": "Example 1: DBScan, eps = 0.1, minpts = 5, similarity metric: genotype",
+  "limited_res__rep_1: db_cluster__ep_0p1__mp_5__mode_phenotype": "Example 1: DBScan, eps = 0.1, minpts = 5, similarity metric: phenotype",
+  "limited_res__rep_1: spec_cluster__nc_6__mode_both": "Example 1: Spectral, Cluster # = 6, similarity metric: genotype",
+  "limited_res__rep_1: spec_cluster__nc_6__mode_genotype": "Example 1: Spectral, Cluster # = 6, similarity metric: genotype",
+  "limited_res__rep_1: spec_cluster__nc_6__mode_phenotype": "Example 1: Spectral, Cluster # = 6, similarity metric: genotype",
+  "limited_res__rep_2: db_cluster__ep_0p1__mp_5__mode_both": "Example 2: DBScan, eps = 0.1, minpts = 5, similarity metric: combination",
+  "limited_res__rep_2: db_cluster__ep_0p1__mp_5__mode_genotype": "Example 2: DBScan, eps = 0.1, minpts = 5, similarity metric: genotype",
+  "limited_res__rep_2: db_cluster__ep_0p1__mp_5__mode_phenotype": "Example 2: DBScan, eps = 0.1, minpts = 5, similarity metric: phenotype",
+  "limited_res__rep_2: spec_cluster__nc_6__mode_both": "Example 2: Spectral, Cluster # = 6, similarity metric: combination",
+  "limited_res__rep_2: spec_cluster__nc_6__mode_genotype": "Example 2: Spectral, Cluster # = 6, similarity metric: genotype",
+  "limited_res__rep_2: spec_cluster__nc_6__mode_phenotype": "Example 2: Spectral, Cluster # = 6, similarity metric: phenotype"
+}
+var humanReadableToCodeSelections = {
+  "Example 1: DBScan, eps = 0.1, minpts = 5, similarity metric: combination": "limited_res__rep_1: db_cluster__ep_0p1__mp_5__mode_both",
+  "Example 1: DBScan, eps = 0.1, minpts = 5, similarity metric: genotype": "limited_res__rep_1: db_cluster__ep_0p1__mp_5__mode_genotype",
+  "Example 1: DBScan, eps = 0.1, minpts = 5, similarity metric: phenotype": "limited_res__rep_1: db_cluster__ep_0p1__mp_5__mode_phenotype",
+  "Example 1: Spectral, Cluster # = 6, similarity metric: genotype": "limited_res__rep_1: spec_cluster__nc_6__mode_both",
+  "Example 1: Spectral, Cluster # = 6, similarity metric: genotype": "limited_res__rep_1: spec_cluster__nc_6__mode_genotype",
+  "Example 1: Spectral, Cluster # = 6, similarity metric: genotype": "limited_res__rep_1: spec_cluster__nc_6__mode_phenotype",
+  "Example 2: DBScan, eps = 0.1, minpts = 5, similarity metric: combination": "limited_res__rep_2: db_cluster__ep_0p1__mp_5__mode_both",
+  "Example 2: DBScan, eps = 0.1, minpts = 5, similarity metric: genotype": "limited_res__rep_2: db_cluster__ep_0p1__mp_5__mode_genotype",
+  "Example 2: DBScan, eps = 0.1, minpts = 5, similarity metric: phenotype": "limited_res__rep_2: db_cluster__ep_0p1__mp_5__mode_phenotype",
+  "Example 2: Spectral, Cluster # = 6, similarity metric: combination": "limited_res__rep_2: spec_cluster__nc_6__mode_both",
+  "Example 2: Spectral, Cluster # = 6, similarity metric: genotype": "limited_res__rep_2: spec_cluster__nc_6__mode_genotype",
+  "Example 2: Spectral, Cluster # = 6, similarity metric: phenotype": "limited_res__rep_2: spec_cluster__nc_6__mode_phenotype"
+}
 
 var margin = {top: 20, right: 20, bottom: 20, left: 20};
 var frameWidth = 940;
@@ -14,7 +43,7 @@ var canvasHeight = frameHeight - margin.top - margin.bottom;
 
 var tooltip = d3.select("body")
                         .append("div")
-                        .attr({"class": "t-tip"})
+                        .attr({"class": "well"})
                         .style("position", "absolute")
                         .style("z-index", "10")
                         .style("visibility", "hidden");
@@ -174,7 +203,7 @@ var runVisualization = function() {
   var refreshDashboard = function() {
     /* The function refreshes the visualization dashboard. */
     // Update treatment dropdown text.
-    var treatmentDropDownButton = $("#treatment_selector").text(currentTreatmentCode);
+    var treatmentDropDownButton = $("#treatment_selector").text(codeToHumanReadableSelections[currentTreatmentCode]);
   }
   var treatmentDropdownCallback = function() {
     /* Called on treatment drop down click. */
@@ -382,10 +411,10 @@ var runVisualization = function() {
               .appendTo(treatmentDropdown);
     var a = $("<a/>")
               .attr({"value": this, "href": "#"})
-              .text(this)
+              .text(codeToHumanReadableSelections[this])
               .appendTo(li);
   });
-  var treatmentDropdownButton = $("#treatment_selector").text(currentTreatmentCode);
+  var treatmentDropdownButton = $("#treatment_selector").text(codeToHumanReadableSelections[currentTreatmentCode]);
   $("<span/>").attr({"class": "caret"}).appendTo(treatmentDropdownButton);
   // Setup component listeners.
   $(document).ready(function() {

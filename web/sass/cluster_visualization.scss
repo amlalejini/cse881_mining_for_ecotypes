@@ -14,6 +14,9 @@
 
 .back_cluster_line {
   z-index: 10;
+  &:hover {
+    stroke-width: 3;
+  }
 }
 
 .ancestor_line {
@@ -38,4 +41,10 @@
 
 .y_axis {
   @extend .axis;
+}
+
+.t-tip {
+  background-color: #eee;
+  color: #555;
+  padding: 7px;
 }

@@ -20,11 +20,31 @@
       <div class="row">
         <div class="col-md-12">
           <div class="panel panel-default" id="about_panel">
-            <div class="panel-heading">
-              <h2> About </h2>
+            <div class="panel-heading" role="tab" id="about-heading">
+              <h2><a class role = "button" data-toggle="collapse" href="#collapseAbout"
+                  aria-expanded="true" aria-controls="collapseAbout"> About </a></h2>
             </div>
+            <div id="collapseAbout" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="about-heading" aria-expanded="true">
             <div class="panel-body">
-              TODO
+              <h3>The Big Picture</h3>
+              <p>
+                We used clustered populations of digital organisms based on genotypic and phenotypic
+                similarity between organisms in the population. We used these clusters to detect co-existing
+                ecotypes within the population and to infer phylogenetic relationships between clusters at
+                one point in time to clusters at a past point in time.
+              </p>
+              <h3>The Data</h3>
+              <p>
+                This data was collected using the Avida Digital Evolution Platform. We replicated the
+                environment described <a href="http://ofria.com/pubs/2004ChowEtAl.pdf">here</a>.
+              </p>
+              <h3>How to read this visualization:</h3>
+              <p>
+                <div class="img-default">
+                  <img src="imgs/visualization_guide.png" alt="Legend" class="img-responsive">
+                </div>
+              </p>
+            </div>
             </div>
           </div>
         </div>
@@ -33,12 +53,15 @@
       <div class="row">
         <div class="col-md-12">
           <div class="panel panel-default" id="accuracy_panel">
-            <div class="panel-heading">
-              <h2> Accuracy Results </h2>
+            <div class="panel-heading" role="tab" id="accuracy-results-heading">
+              <h2><a class role = "button" data-toggle="collapse" href="#collapseAccuracyResults"
+                  aria-expanded="true" aria-controls="collapseAccuracyResults"> Accuracy Results </a></h2>
             </div>
             <div class="panel-body">
-              <table id="accuracy_table" class="table">
-              </table>
+              <div id="collapseAccuracyResults" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="accuracy-results-heading" aria-expanded="true">
+                <table id="accuracy_table" class="table">
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -83,6 +106,10 @@
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
       <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.0/js/bootstrap-toggle.min.js"></script>
+      <script>
+        $('#collapseAccuracyResults').collapse("hide");
+        $('#collapseAbout').collapse("hide");
+      </script>
       <script src="//d3js.org/d3.v3.min.js"></script>
       <script src="https://d3js.org/d3-queue.v2.min.js"></script>
       <script src="js/cluster_visualization.js"></script>
