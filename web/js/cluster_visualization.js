@@ -415,6 +415,7 @@ var runVisualization = function() {
               .appendTo(li);
   });
   var treatmentDropdownButton = $("#treatment_selector").text(codeToHumanReadableSelections[currentTreatmentCode]);
+
   $("<span/>").attr({"class": "caret"}).appendTo(treatmentDropdownButton);
   // Setup component listeners.
   $(document).ready(function() {
